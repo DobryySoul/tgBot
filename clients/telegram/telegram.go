@@ -18,8 +18,8 @@ type Client struct {
 }
 
 const (
-	getUpdatesMethod = "getUpdates"
-	getMessageMethod = "getUpdates"
+	getUpdatesMethod  = "getUpdates"
+	sendMessageMethod = "sendMessage"
 )
 
 func New(host string, token string) *Client {
@@ -58,7 +58,7 @@ func (c *Client) SendMessage(chatID int, text string) error {
 	q.Add("chat_id", strconv.Itoa(chatID))
 	q.Add("text", text)
 
-	_, err := c.doRequest(getMessageMethod, q)
+	_, err := c.doRequest(sendMessageMethod, q)
 	if err != nil {
 		return e.Wrap("can't send message", err)
 	}

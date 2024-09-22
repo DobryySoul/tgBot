@@ -1,31 +1,42 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 
 	tgClient "go.mod/clients/telegram"
-	event_consumer "go.mod/consumer/event-consumer"
+	"go.mod/consumer/eventconsumer"
 	"go.mod/events/telegram"
-	"go.mod/storage/files"
+	"go.mod/storage/sqlite"
 )
 
 const (
-	tgBotHost   = "api.telegram.org"
-	storagePath = "files-storage"
-	batchSize   = 100
+	tgBotHost         = "api.telegram.org"
+	sqliteStoragePath = "data/sqlite/storage.db"
+	batchSize         = 100
 )
 
 func main() {
 
+	s, err := sqlite.New(sqliteStoragePath)
+
+	if err != nil {
+		log.Fatal("cannot create sqlite storage", err)
+	}
+
+	if err := s.Init(context.TODO()); err != nil {
+		log.Fatal("cannot init sqlite storage", err)
+	}
+
 	eventsProcessor := telegram.New(
 		tgClient.New(tgBotHost, mustToken()),
-		files.New(storagePath),
+		s,
 	)
 
 	log.Print("service started")
 
-	consumer := event_consumer.New(eventsProcessor, eventsProcessor, batchSize)
+	consumer := eventconsumer.New(eventsProcessor, eventsProcessor, batchSize)
 
 	if err := consumer.Start(); err != nil {
 		log.Fatal("service is stopped", err)
